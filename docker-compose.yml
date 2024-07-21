@@ -1,0 +1,58 @@
+version: '3.7'
+
+services:
+  redditclone_api:
+    container_name: redditclone_api
+    env_file:
+      - ./cmd/redditclone/.env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    expose:
+      - 8080
+    depends_on:
+      - redditclone_mysql
+      - redditclone_redis
+      - redditclone_mongo
+  
+  redditclone_redis:
+    container_name: redditclone_redis
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    expose:
+      - 6379
+    
+  redditclone_mongo:
+    container_name: redditclone_mongo
+    image: mongo:7-jammy
+    volumes:
+      - ./scripts/JS/:/docker-entrypoint-initdb.d/
+      - redditclone_mongo_data:/data/db
+    env_file:
+      - ./cmd/redditclone/.env
+    ports:
+      - "27017:27017"
+    expose:
+      - 27017
+
+  redditclone_mysql:
+    container_name: redditclone_mysql
+    image: mysql:8.4.0
+    volumes:
+      - ./scripts/SQL/:/docker-entrypoint-initdb.d/
+      - redditclone_mysql_data:/var/lib/mysql
+    env_file:
+      - ./cmd/redditclone/.env
+    ports:
+      - "3306:3306"
+    expose:
+      - 3306
+
+volumes:
+  redditclone_mongo_data:
+    driver: "local"
+  redditclone_mysql_data:
+    driver: "local"
